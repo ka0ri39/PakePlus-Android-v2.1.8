@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>小众测评</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23F5E6C8'/%3E%3Crect x='18' y='14' width='28' height='6' rx='3' fill='%238C5A2B'/%3E%3Crect x='20' y='20' width='24' height='28' rx='4' fill='%23D9A56D'/%3E%3Ccircle cx='26' cy='40' r='3' fill='%234B2C20'/%3E%3Ccircle cx='38' cy='40' r='3' fill='%234B2C20'/%3E%3Crect x='26' y='6' width='4' height='12' fill='%234B2C20'/%3E%3Crect x='34' y='6' width='4' height='12' fill='%234B2C20'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/review-page.css">
+    <style>
+        /* 出行页面特有：类型切换 */
+        .type-section { display: none; }
+        .type-section.active { display: block; }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <div class="app-content">
+            <div class="nav-bar">
+                <button class="back-btn" id="backBtn">←</button>
+                <span class="nav-title">🚆 出行交通测评</span>
+            </div>
+
+            <div class="status-badge" id="statusBadge">
+                <span class="status-icon" id="statusIcon">🔄</span>
+                <span id="statusText">连接后端中...</span>
+            </div>
+
+            <div class="search-section">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="搜索线路、公司或酒店..." autocomplete="off">
+                </div>
+                <button class="add-btn" id="addBtn">
+                    <span class="add-icon">+</span>
+                    新增
+                </button>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header">
+                    <div>名称</div>
+                    <div>酒店名/公司名</div>
+                    <div>评分</div>
+                </div>
+                <div id="tableBody">
+                    <div class="loading-state" id="loadingState">加载中...</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 16px; font-size: 13px; color: #8a9bb0; display: flex; justify-content: space-between;">
+                <span id="totalCount">共 0 条记录</span>
+                <span>点击卡片查看详情</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增/编辑模态框 -->
+    <div class="modal" id="formModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">新增测评</h3>
+                <span class="close-btn" id="closeModalBtn">&times;</span>
+            </div>
+            <form id="reviewForm">
+                <input type="hidden" id="originalType" value="">
+                <input type="hidden" id="originalReviewer" value="">
+                <input type="hidden" id="originalCreatedAt" value="">
+
+                <div class="form-group">
+                    <label>测评类型 <span style="color: #b33e4e;">*</span></label>
+                    <select id="reviewType" required>
+                        <option value="transport">交通工具</option>
+                        <option value="hotel">酒店</option>
+                    </select>
+                </div>
+                <div class="type-section" id="transportFields">
+                    <div class="form-group">
+                        <label>线路 <span style="color: #b33e4e;">*</span></label>
+                        <input type="text" id="lineName" placeholder="例: 杭州-上海" required>
+                    </div>
+                    <div class="form-group">
+                        <label>公司 <span style="color: #b33e4e;">*</span></label>
+                        <input type="text" id="companyName" placeholder="例: 高铁" required>
+                    </div>
+                    <div class="form-group">
+                        <label>配置及价格</label>
+                        <input type="text" id="transportConfig" placeholder="例: 二等座 132元">
+                    </div>
+                </div>
+                <div class="type-section" id="hotelFields">
+                    <div class="form-group">
+                        <label>酒店名 <span style="color: #b33e4e;">*</span></label>
+                        <input type="text" id="hotelName" placeholder="例: 杭州万怡" required>
+                    </div>
+                    <div class="form-group">
+                        <label>房型及价格</label>
+                        <input type="text" id="roomPrice" placeholder="例: 大床房 680元/晚">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>评分 (1-10分)</label>
+                    <div class="rating-select" id="ratingSelect"></div>
+                    <input type="hidden" id="rating" value="5">
+                </div>
+                <div class="form-group">
+                    <label>测评人 <span style="color: #b33e4e;">*</span></label>
+                    <input type="text" id="reviewer" placeholder="例: 张三" value="测试用户">
+                </div>
+                <div class="form-group">
+                    <label>备注</label>
+                    <textarea id="remark" placeholder="写下你的测评感受..."></textarea>
+                    <input type="hidden" id="reviewImageData" value="">
+                    <div class="image-actions">
+                        <input type="file" id="reviewImageInput" accept="image/*" multiple>
+                        <button type="button" class="submit-btn" id="reviewImageUploadBtn">上传图片</button>
+                        <button type="button" class="cancel-btn" id="reviewImageRemoveBtn">清空图片</button>
+                    </div>
+                    <div class="review-image-grid" id="reviewImagePreview" aria-live="polite"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="cancel-btn" id="cancelBtn">取消</button>
+                    <button type="submit" class="submit-btn" id="submitBtn">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 详情模态框 -->
+    <div class="modal" id="detailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>测评详情</h3>
+                <span class="close-btn" id="closeDetailBtn">&times;</span>
+            </div>
+            <div class="detail-content" id="detailContent"></div>
+            <div class="modal-footer" id="detailFooter" style="margin-top: 24px;">
+                <button type="button" class="cancel-btn" id="closeDetailBtnFooter">关闭</button>
+                <button type="button" class="submit-btn" id="editDetailBtn">编辑</button>
+                <button type="button" class="delete-btn" id="deleteDetailBtn">删除</button>
+            </div>
+        </div>
+    </div>
+
+    <button class="dark-mode-toggle" id="darkModeToggle" title="切换深色模式"><span id="darkModeIcon">🌙</span></button>
+
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/image-zoom.js"></script>
+    <script src="js/review-common.js"></script>
+
+    <script>
+    (function () {
+        const R = ReviewCommon;
+        const BASE_URL = R.BASE_URL;
+
+        let currentDisplayData = [];
+        let currentEditItem = null;
+
+        // DOM
+        const tableBody = document.getElementById('tableBody');
+        const loadingState = document.getElementById('loadingState');
+        const totalCountSpan = document.getElementById('totalCount');
+        const formModal = document.getElementById('formModal');
+        const detailModal = document.getElementById('detailModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const reviewForm = document.getElementById('reviewForm');
+        const reviewType = document.getElementById('reviewType');
+        const lineName = document.getElementById('lineName');
+        const companyName = document.getElementById('companyName');
+        const transportConfig = document.getElementById('transportConfig');
+        const hotelName = document.getElementById('hotelName');
+        const roomPrice = document.getElementById('roomPrice');
+        const reviewer = document.getElementById('reviewer');
+        const remark = document.getElementById('remark');
+        const rating = document.getElementById('rating');
+        const originalType = document.getElementById('originalType');
+        const originalReviewer = document.getElementById('originalReviewer');
+        const originalCreatedAt = document.getElementById('originalCreatedAt');
+        const transportFields = document.getElementById('transportFields');
+        const hotelFields = document.getElementById('hotelFields');
+
+        // 状态
+        const statusBadge = document.getElementById('statusBadge');
+        const statusIcon = document.getElementById('statusIcon');
+        const statusText = document.getElementById('statusText');
+        function setStatus(type, msg) { R.updateStatus(statusBadge, statusIcon, statusText, type, msg); }
+
+        // 评分
+        const ratingCtrl = R.initRatingSelector(document.getElementById('ratingSelect'), rating);
+
+        // 图片
+        const imageManager = R.createImageManager(
+            document.getElementById('reviewImagePreview'),
+            document.getElementById('reviewImageData')
+        );
+        R.bindImageUpload(
+            document.getElementById('reviewImageInput'),
+            document.getElementById('reviewImageUploadBtn'),
+            document.getElementById('reviewImageRemoveBtn'),
+            imageManager
+        );
+
+        function showLoading() { loadingState.classList.remove('hidden'); tableBody.innerHTML = ''; tableBody.appendChild(loadingState); }
+        function hideLoading() { loadingState.classList.add('hidden'); }
+
+        // 类型切换
+        function updateTypeFields() {
+            const isTransport = reviewType.value === 'transport';
+            transportFields.classList.toggle('active', isTransport);
+            hotelFields.classList.toggle('active', !isTransport);
+            lineName.required = isTransport;
+            companyName.required = isTransport;
+            hotelName.required = !isTransport;
+        }
+        reviewType.addEventListener('change', updateTypeFields);
+
+        // ===== 渲染表格 =====
+        function renderTable(data) {
+            hideLoading();
+            if (!Array.isArray(data)) data = [];
+
+            if (data.length === 0) {
+                tableBody.innerHTML = `<div class="empty-state"><div class="big-emoji">🧳</div><p>暂无出行交通测评记录</p>
+                    <button class="empty-add-btn" id="emptyAddBtn">+ 新增第一条记录</button></div>`;
+                document.getElementById('emptyAddBtn')?.addEventListener('click', openAddModal);
+            } else {
+                tableBody.innerHTML = data.map((item, i) => {
+                    const rv = R.formatRating(item.评分);
+                    const rc = R.getRatingClass(rv);
+                    const isTransport = item.type === 'transport';
+                    const nameVal = isTransport ? (item.线路 || '-') : (item.房型及价格 || item.酒店名 || '-');
+                    const secondVal = isTransport ? (item.公司 || '-') : (item.酒店名 || '-');
+                    const nc = R.getNameClass(nameVal);
+                    return `<div class="table-row" data-index="${i}">
+                        <div class="cell ${nc}" title="${nameVal}">${nameVal}</div>
+                        <div class="cell cell-brand" title="${secondVal}">${secondVal}</div>
+                        <div class="cell cell-rating-wrapper"><span class="cell-rating ${rc}">${rv}</span></div>
+                    </div>`;
+                }).join('');
+                document.querySelectorAll('.table-row').forEach(row => {
+                    row.addEventListener('click', () => showDetail(currentDisplayData[row.dataset.index]));
+                });
+            }
+            totalCountSpan.innerText = `共 ${data.length} 条记录`;
+        }
+
+        // ===== API =====
+        async function fetchAllData() {
+            showLoading();
+            setStatus('info', '连接后端中...');
+            const result = await API.travel.query();
+            if (result.success) {
+                currentDisplayData = Array.isArray(result.data) ? result.data : [];
+                renderTable(currentDisplayData);
+                setStatus(currentDisplayData.length > 0 ? 'success' : 'warning',
+                    currentDisplayData.length > 0 ? `连接成功，共 ${currentDisplayData.length} 条记录` : '连接成功，但数据库暂无数据');
+            } else {
+                hideLoading();
+                setStatus('error', '连接失败');
+                tableBody.innerHTML = `<div class="empty-state"><div class="big-emoji">❌</div><p>连接后端失败</p>
+                    <div class="error-detail">${result.error}</div>
+                    <button class="empty-add-btn" onclick="location.reload()">重试</button></div>`;
+            }
+        }
+
+        async function searchData(keyword) {
+            showLoading();
+            const result = await API.travel.query({ keyword });
+            if (result.success) {
+                currentDisplayData = Array.isArray(result.data) ? result.data : [];
+                renderTable(currentDisplayData);
+            } else {
+                hideLoading();
+                tableBody.innerHTML = `<div class="empty-state"><div class="big-emoji">🔍</div><p>搜索失败</p>
+                    <div class="error-detail">${result.error}</div>
+                    <button class="empty-add-btn" onclick="location.reload()">返回列表</button></div>`;
+            }
+        }
+
+        async function addReview(data) {
+            if (data.rating < 1 || data.rating > 10) { Toast.error('评分必须在1-10之间'); return; }
+            const detail = data.type === 'transport'
+                ? { '线路': data.lineName, '公司': data.companyName, '配置及价格': data.transportConfig || '' }
+                : { '酒店名': data.hotelName, '房型及价格': data.roomPrice || '' };
+            const result = await post('/travel/update', {
+                type: data.type, '测评人': data.reviewer || '测试用户',
+                '评分': data.rating, '备注': data.remark || '', '测评图片': data.images || '',
+                detail: { ...detail, '测评图片': data.images || '' }
+            });
+            if (result.success) { Toast.success('添加成功'); closeModal(); fetchAllData(); }
+            else Toast.error('添加失败: ' + result.error);
+        }
+
+        async function modifyReview(origType, origReviewer, origCreatedAt, newData) {
+            if (newData.rating < 1 || newData.rating > 10) { Toast.error('评分必须在1-10之间'); return; }
+            const detail = newData.type === 'transport'
+                ? { '线路': newData.lineName, '公司': newData.companyName, '配置及价格': newData.transportConfig || '' }
+                : { '酒店名': newData.hotelName, '房型及价格': newData.roomPrice || '' };
+            const payload = {
+                type: origType, '测评人': origReviewer, original_reviewer: origReviewer,
+                created_at: origCreatedAt, '评分': newData.rating, '备注': newData.remark || '',
+                '测评图片': newData.images || '', detail: { ...detail, '测评图片': newData.images || '' }
+            };
+            if (newData.reviewer !== undefined) payload['测评人'] = newData.reviewer;
+            const result = await post('/travel/modify', payload);
+            if (result.success) { Toast.success('修改成功'); closeModal(); fetchAllData(); }
+            else Toast.error('修改失败: ' + result.error);
+        }
+
+        async function deleteReviewAPI(typeVal, reviewerVal, createdAt) {
+            const result = await post('/travel/delete', { type: typeVal, '测评人': reviewerVal || '', created_at: createdAt });
+            if (result.success) { Toast.success('删除成功'); fetchAllData(); }
+            else Toast.error('删除失败: ' + result.error);
+        }
+
+        // ===== 模态框 =====
+        function openAddModal() {
+            modalTitle.textContent = '新增测评';
+            reviewForm.reset();
+            originalType.value = originalReviewer.value = originalCreatedAt.value = '';
+            reviewer.value = '测试用户';
+            reviewType.disabled = false;
+            imageManager.setList([]);
+            ratingCtrl.setRating(5);
+            updateTypeFields();
+            formModal.classList.add('show');
+        }
+
+        function openEditModal(item) {
+            modalTitle.textContent = '编辑测评';
+            const isTransport = item.type === 'transport';
+            reviewType.value = isTransport ? 'transport' : 'hotel';
+            reviewType.disabled = true;
+            updateTypeFields();
+            if (isTransport) {
+                lineName.value = item.线路 || '';
+                companyName.value = item.公司 || '';
+                transportConfig.value = item.配置及价格 || '';
+            } else {
+                hotelName.value = item.酒店名 || '';
+                roomPrice.value = item.房型及价格 || '';
+            }
+            reviewer.value = item.测评人 || item.上传者 || '测试用户';
+            remark.value = item.备注 || '';
+            ratingCtrl.setRating(item.评分 || 5);
+            imageManager.setList(R.normalizeImageList(item.测评图片));
+            originalType.value = item.type || '';
+            originalReviewer.value = item.测评人 || item.上传者 || '';
+            originalCreatedAt.value = item.created_at || '';
+            formModal.classList.add('show');
+        }
+
+        function closeModal() { formModal.classList.remove('show'); }
+        function closeDetailModal() { detailModal.classList.remove('show'); }
+
+        function showDetail(item) {
+            const rv = R.formatRating(item.评分);
+            const rc = R.getRatingClass(rv);
+            const isTransport = item.type === 'transport';
+            const imageList = R.normalizeImageList(item.测评图片 || '');
+            let html = `<div class="detail-item"><div class="detail-label">类型</div><div class="detail-value">${isTransport ? '交通工具' : '酒店'}</div></div>`;
+            if (isTransport) {
+                html += `<div class="detail-item"><div class="detail-label">公司</div><div class="detail-value">${item.公司 || '-'}</div></div>
+                    <div class="detail-item"><div class="detail-label">线路</div><div class="detail-value">${item.线路 || '-'}</div></div>
+                    <div class="detail-item"><div class="detail-label">配置及价格</div><div class="detail-value">${item.配置及价格 || '-'}</div></div>`;
+            } else {
+                html += `<div class="detail-item"><div class="detail-label">酒店名</div><div class="detail-value">${item.酒店名 || '-'}</div></div>
+                    <div class="detail-item"><div class="detail-label">房型及价格</div><div class="detail-value">${item.房型及价格 || '-'}</div></div>`;
+            }
+            html += `<div class="detail-item"><div class="detail-label">评分</div><div class="detail-value rating ${rc}">${rv}</div></div>
+                <div class="detail-item"><div class="detail-label">测评人</div><div class="detail-value">${item.测评人 || item.上传者 || '匿名'}</div></div>
+                <div class="detail-item"><div class="detail-label">备注</div><div class="detail-value">${item.备注 || '暂无内容'}</div></div>
+                ${R.buildImageHtml(imageList)}`;
+            document.getElementById('detailContent').innerHTML = html;
+            R.bindDetailImages('#detailModal');
+            currentEditItem = item;
+            document.getElementById('editDetailBtn').onclick = () => { closeDetailModal(); openEditModal(item); };
+            document.getElementById('deleteDetailBtn').onclick = () => {
+                const title = isTransport ? (item.线路 || '该测评') : (item.酒店名 || '该测评');
+                if (confirm(`确定要删除 "${title}" 的测评吗？`)) {
+                    deleteReviewAPI(item.type, item.测评人 || item.上传者 || '', item.created_at || '');
+                    closeDetailModal();
+                }
+            };
+            detailModal.classList.add('show');
+        }
+
+        // ===== 事件绑定 =====
+        document.getElementById('backBtn').addEventListener('click', () => { window.location.href = 'index.html'; });
+        document.getElementById('addBtn').addEventListener('click', openAddModal);
+        document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+        document.getElementById('closeDetailBtn').addEventListener('click', closeDetailModal);
+        document.getElementById('closeDetailBtnFooter').addEventListener('click', closeDetailModal);
+        document.getElementById('cancelBtn').addEventListener('click', closeModal);
+
+        R.bindModalClose(formModal, closeModal);
+        R.bindModalClose(detailModal, closeDetailModal);
+        R.bindSearch(document.getElementById('searchInput'), searchData, fetchAllData);
+
+        reviewForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const type = reviewType.value;
+            const data = {
+                type, rating: parseInt(rating.value),
+                reviewer: reviewer.value.trim() || '测试用户',
+                remark: remark.value.trim(),
+                images: document.getElementById('reviewImageData').value.trim()
+            };
+            if (type === 'transport') {
+                data.lineName = lineName.value.trim();
+                data.companyName = companyName.value.trim();
+                data.transportConfig = transportConfig.value.trim();
+                if (!data.lineName || !data.companyName) { Toast.warning('线路和公司不能为空'); return; }
+            } else {
+                data.hotelName = hotelName.value.trim();
+                data.roomPrice = roomPrice.value.trim();
+                if (!data.hotelName) { Toast.warning('酒店名不能为空'); return; }
+            }
+            const isEdit = originalType.value && originalReviewer.value;
+            if (isEdit) modifyReview(originalType.value, originalReviewer.value, originalCreatedAt.value, data);
+            else addReview(data);
+        });
+
+        // 初始化
+        initImageZoom();
+        updateTypeFields();
+        fetchAllData();
+
+        const editItem = sessionStorage.getItem('editItem');
+        if (editItem) {
+            try { openEditModal(JSON.parse(editItem)); } catch (e) {}
+            sessionStorage.removeItem('editItem');
+        }
+    })();
+    </script>
+</body>
+</html>
