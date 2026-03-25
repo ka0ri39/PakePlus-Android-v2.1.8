@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>小众测评</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23F5E6C8'/%3E%3Crect x='18' y='14' width='28' height='6' rx='3' fill='%238C5A2B'/%3E%3Crect x='20' y='20' width='24' height='28' rx='4' fill='%23D9A56D'/%3E%3Ccircle cx='26' cy='40' r='3' fill='%234B2C20'/%3E%3Ccircle cx='38' cy='40' r='3' fill='%234B2C20'/%3E%3Crect x='26' y='6' width='4' height='12' fill='%234B2C20'/%3E%3Crect x='34' y='6' width='4' height='12' fill='%234B2C20'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/review-page.css">
+</head>
+<body>
+    <div class="phone-frame">
+        <div class="app-content">
+            <div class="nav-bar">
+                <button class="back-btn" id="backBtn">←</button>
+                <span class="nav-title">🍽️ 美食测评</span>
+            </div>
+
+            <div class="status-badge" id="statusBadge">
+                <span class="status-icon" id="statusIcon">🔄</span>
+                <span id="statusText">连接后端中...</span>
+            </div>
+
+            <div class="search-section">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="搜索商品或商店..." autocomplete="off">
+                </div>
+                <button class="add-btn" id="addBtn">
+                    <span class="add-icon">+</span>
+                    新增
+                </button>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header">
+                    <div>商品名称</div>
+                    <div>商店</div>
+                    <div style="display: flex; align-items: center; gap: 0;">
+                        <div class="sort-dropdown-wrapper">
+                            <button class="sort-dropdown-toggle" id="sortToggleBtn" type="button">评分</button>
+                            <div class="sort-dropdown-menu" id="sortDropdown">
+                                <div class="sort-dropdown-item active" data-sort="default">默认排序</div>
+                                <div class="sort-dropdown-item" data-sort="high-to-low">高到低 (10→1)</div>
+                                <div class="sort-dropdown-item" data-sort="low-to-high">低到高 (1→10)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="tableBody">
+                    <div class="loading-state" id="loadingState">加载中...</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 16px; font-size: 13px; color: #8a9bb0; display: flex; justify-content: space-between;">
+                <span id="totalCount">共 0 条记录</span>
+                <span>点击卡片查看详情</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增/编辑模态框 -->
+    <div class="modal" id="formModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">新增测评</h3>
+                <span class="close-btn" id="closeModalBtn">&times;</span>
+            </div>
+            <form id="reviewForm">
+                <input type="hidden" id="originalShopName" value="">
+                <input type="hidden" id="originalProductName" value="">
+                <input type="hidden" id="originalReviewer" value="">
+
+                <div class="form-group">
+                    <label>商品名称 <span style="color: #b33e4e;">*</span></label>
+                    <input type="text" id="productName" placeholder="例: 饭团、关东煮" required>
+                </div>
+                <div class="form-group">
+                    <label>商店 <span style="color: #b33e4e;">*</span></label>
+                    <input type="text" id="shopName" placeholder="例: 7-11、全家" required>
+                </div>
+                <div class="form-group">
+                    <label>评分 (1-10分)</label>
+                    <div class="rating-select" id="ratingSelect"></div>
+                    <input type="hidden" id="rating" value="5">
+                </div>
+                <div class="form-group">
+                    <label>测评者 <span style="color: #b33e4e;">*</span></label>
+                    <input type="text" id="reviewer" placeholder="例: 张三" value="测试用户">
+                </div>
+                <div class="form-group">
+                    <label>测评内容</label>
+                    <textarea id="remark" placeholder="写下你的测评感受..."></textarea>
+                    <input type="hidden" id="reviewImageData" value="">
+                    <div class="image-actions">
+                        <input type="file" id="reviewImageInput" accept="image/*" multiple>
+                        <button type="button" class="submit-btn" id="reviewImageUploadBtn">上传图片</button>
+                        <button type="button" class="cancel-btn" id="reviewImageRemoveBtn">清空图片</button>
+                    </div>
+                    <div class="review-image-grid" id="reviewImagePreview" aria-live="polite"></div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="cancel-btn" id="cancelBtn">取消</button>
+                    <button type="submit" class="submit-btn" id="submitBtn">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 详情模态框 -->
+    <div class="modal" id="detailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>测评详情</h3>
+                <span class="close-btn" id="closeDetailBtn">&times;</span>
+            </div>
+            <div class="detail-content" id="detailContent"></div>
+            <div class="modal-footer" id="detailFooter" style="margin-top: 24px;">
+                <button type="button" class="cancel-btn" id="closeDetailBtnFooter">关闭</button>
+                <button type="button" class="submit-btn" id="editDetailBtn">编辑</button>
+                <button type="button" class="delete-btn" id="deleteDetailBtn">删除</button>
+            </div>
+        </div>
+    </div>
+
+    <button class="dark-mode-toggle" id="darkModeToggle" title="切换深色模式">
+        <span id="darkModeIcon">🌙</span>
+    </button>
+
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/image-zoom.js"></script>
+    <script src="js/review-common.js"></script>
+
+    <script>
+    (function () {
+        const R = ReviewCommon;
+        const BASE_URL = R.BASE_URL;
+
+        let currentDisplayData = [];
+        let currentEditItem = null;
+        let currentSortMode = 'default';
+
+        // DOM
+        const tableBody = document.getElementById('tableBody');
+        const loadingState = document.getElementById('loadingState');
+        const totalCountSpan = document.getElementById('totalCount');
+        const formModal = document.getElementById('formModal');
+        const detailModal = document.getElementById('detailModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const reviewForm = document.getElementById('reviewForm');
+        const shopName = document.getElementById('shopName');
+        const productName = document.getElementById('productName');
+        const reviewer = document.getElementById('reviewer');
+        const remark = document.getElementById('remark');
+        const rating = document.getElementById('rating');
+        const originalShopName = document.getElementById('originalShopName');
+        const originalProductName = document.getElementById('originalProductName');
+        const originalReviewer = document.getElementById('originalReviewer');
+
+        // 状态
+        const statusBadge = document.getElementById('statusBadge');
+        const statusIcon = document.getElementById('statusIcon');
+        const statusText = document.getElementById('statusText');
+        function setStatus(type, msg) { R.updateStatus(statusBadge, statusIcon, statusText, type, msg); }
+
+        // 评分
+        const ratingCtrl = R.initRatingSelector(document.getElementById('ratingSelect'), rating);
+
+        // 图片
+        const imageManager = R.createImageManager(
+            document.getElementById('reviewImagePreview'),
+            document.getElementById('reviewImageData')
+        );
+        R.bindImageUpload(
+            document.getElementById('reviewImageInput'),
+            document.getElementById('reviewImageUploadBtn'),
+            document.getElementById('reviewImageRemoveBtn'),
+            imageManager
+        );
+
+        // 工具
+        function showLoading() { loadingState.classList.remove('hidden'); tableBody.innerHTML = ''; tableBody.appendChild(loadingState); }
+        function hideLoading() { loadingState.classList.add('hidden'); }
+
+        // ===== 渲染表格 =====
+        function renderTable(data) {
+            hideLoading();
+            if (!Array.isArray(data)) data = [];
+            const sorted = R.sortData(data, currentSortMode, '评分', 'created_at');
+
+            if (sorted.length === 0) {
+                tableBody.innerHTML = `
+                    <div class="empty-state">
+                        <div class="big-emoji">🏪</div>
+                        <p>暂无美食测评记录</p>
+                        <button class="empty-add-btn" id="emptyAddBtn">+ 新增第一条记录</button>
+                    </div>`;
+                document.getElementById('emptyAddBtn')?.addEventListener('click', openAddModal);
+            } else {
+                tableBody.innerHTML = sorted.map((item, i) => {
+                    const rv = R.formatRating(item.评分);
+                    const rc = R.getRatingClass(rv);
+                    const nc = R.getNameClass(item.商品名称);
+                    return `<div class="table-row" data-index="${i}">
+                        <div class="cell ${nc}" title="${item.商品名称}">${item.商品名称}</div>
+                        <div class="cell cell-brand" title="${item.商店}">${item.商店}</div>
+                        <div class="cell cell-rating-wrapper"><span class="cell-rating ${rc}">${rv}</span></div>
+                    </div>`;
+                }).join('');
+
+                document.querySelectorAll('.table-row').forEach(row => {
+                    row.addEventListener('click', () => showDetail(sorted[row.dataset.index]));
+                });
+            }
+            totalCountSpan.innerText = `共 ${sorted.length} 条记录`;
+        }
+
+        // ===== API =====
+        async function fetchAllData() {
+            showLoading();
+            setStatus('info', '连接后端中...');
+            const result = await API.convenience.query();
+            if (result.success) {
+                currentDisplayData = Array.isArray(result.data) ? result.data : [];
+                renderTable(currentDisplayData);
+                setStatus(currentDisplayData.length > 0 ? 'success' : 'warning',
+                    currentDisplayData.length > 0 ? `连接成功，共 ${currentDisplayData.length} 条记录` : '连接成功，但数据库暂无数据');
+            } else {
+                hideLoading();
+                setStatus('error', '连接失败');
+                tableBody.innerHTML = `
+                    <div class="empty-state">
+                        <div class="big-emoji">❌</div>
+                        <p>连接后端失败</p>
+                        <div class="error-detail">${result.error}</div>
+                        <button class="empty-add-btn" onclick="location.reload()">重试</button>
+                    </div>`;
+            }
+        }
+
+        async function searchData(keyword) {
+            showLoading();
+            const result = await API.convenience.query({ keyword });
+            if (result.success) {
+                currentDisplayData = Array.isArray(result.data) ? result.data : [];
+                renderTable(currentDisplayData);
+            } else {
+                hideLoading();
+                tableBody.innerHTML = `
+                    <div class="empty-state">
+                        <div class="big-emoji">🔍</div><p>搜索失败</p>
+                        <div class="error-detail">${result.error}</div>
+                        <button class="empty-add-btn" onclick="location.reload()">返回列表</button>
+                    </div>`;
+            }
+        }
+
+        async function addReview(data) {
+            if (data.rating < 1 || data.rating > 10) { Toast.error('评分必须在1-10之间'); return; }
+            const result = await post('/convenience/update', {
+                '商品名称': data.productName, '商店': data.shopName,
+                '上传者': data.reviewer || '测试用户', '评分': data.rating,
+                '测评内容': data.remark || '', '测评图片': data.images || ''
+            });
+            if (result.success) { Toast.success('添加成功'); closeModal(); fetchAllData(); }
+            else Toast.error('添加失败: ' + result.error);
+        }
+
+        async function modifyReview(origShop, origProduct, origReviewer, newData) {
+            if (newData.rating < 1 || newData.rating > 10) { Toast.error('评分必须在1-10之间'); return; }
+            const payload = { '商品名称': origProduct, '商店': origShop, '上传者': origReviewer };
+            if (newData.rating !== undefined) payload['评分'] = newData.rating;
+            if (newData.remark !== undefined) payload['测评内容'] = newData.remark;
+            if (newData.reviewer !== undefined) payload['上传者'] = newData.reviewer;
+            if (newData.images !== undefined) payload['测评图片'] = newData.images;
+            const result = await post('/convenience/modify', payload);
+            if (result.success) { Toast.success('修改成功'); closeModal(); fetchAllData(); }
+            else Toast.error('修改失败: ' + result.error);
+        }
+
+        async function deleteReviewAPI(shop, product, reviewerName) {
+            const result = await post('/convenience/delete', {
+                '商品名称': product, '商店': shop, '上传者': reviewerName || ''
+            });
+            if (result.success) { Toast.success('删除成功'); fetchAllData(); }
+            else Toast.error('删除失败: ' + result.error);
+        }
+
+        // ===== 模态框 =====
+        function openAddModal() {
+            modalTitle.textContent = '新增测评';
+            reviewForm.reset();
+            originalShopName.value = originalProductName.value = originalReviewer.value = '';
+            reviewer.value = '测试用户';
+            shopName.disabled = productName.disabled = reviewer.disabled = false;
+            imageManager.setList([]);
+            ratingCtrl.setRating(5);
+            formModal.classList.add('show');
+        }
+
+        function openEditModal(item) {
+            modalTitle.textContent = '编辑测评';
+            shopName.value = item.商店 || '';
+            productName.value = item.商品名称 || '';
+            reviewer.value = item.上传者 || '测试用户';
+            remark.value = item.测评内容 || '';
+            ratingCtrl.setRating(item.评分 || 5);
+            imageManager.setList(R.normalizeImageList(item.测评图片));
+            shopName.disabled = productName.disabled = reviewer.disabled = true;
+            originalShopName.value = item.商店 || '';
+            originalProductName.value = item.商品名称 || '';
+            originalReviewer.value = item.上传者 || '';
+            formModal.classList.add('show');
+        }
+
+        function closeModal() { formModal.classList.remove('show'); }
+        function closeDetailModal() { detailModal.classList.remove('show'); }
+
+        function showDetail(item) {
+            const rv = R.formatRating(item.评分);
+            const rc = R.getRatingClass(rv);
+            const imageList = R.normalizeImageList(item.测评图片 || '');
+            document.getElementById('detailContent').innerHTML = `
+                <div class="detail-item"><div class="detail-label">商品名称</div><div class="detail-value">${item.商品名称 || '-'}</div></div>
+                <div class="detail-item"><div class="detail-label">商店</div><div class="detail-value">${item.商店 || '-'}</div></div>
+                <div class="detail-item"><div class="detail-label">评分</div><div class="detail-value rating ${rc}">${rv}</div></div>
+                <div class="detail-item"><div class="detail-label">测评者</div><div class="detail-value">${item.上传者 || '匿名'}</div></div>
+                <div class="detail-item"><div class="detail-label">测评内容</div><div class="detail-value">${item.测评内容 || '暂无内容'}</div></div>
+                ${R.buildImageHtml(imageList)}`;
+            R.bindDetailImages('#detailModal');
+            currentEditItem = item;
+            document.getElementById('editDetailBtn').onclick = () => { closeDetailModal(); openEditModal(item); };
+            document.getElementById('deleteDetailBtn').onclick = () => {
+                if (confirm(`确定要删除 "${item.商品名称}" 的测评吗？`)) { deleteReviewAPI(item.商店, item.商品名称, item.上传者 || ''); closeDetailModal(); }
+            };
+            detailModal.classList.add('show');
+        }
+
+        // ===== 事件绑定 =====
+        document.getElementById('backBtn').addEventListener('click', () => { window.location.href = 'index.html'; });
+        document.getElementById('addBtn').addEventListener('click', openAddModal);
+        document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+        document.getElementById('closeDetailBtn').addEventListener('click', closeDetailModal);
+        document.getElementById('closeDetailBtnFooter').addEventListener('click', closeDetailModal);
+        document.getElementById('cancelBtn').addEventListener('click', closeModal);
+
+        R.bindModalClose(formModal, closeModal);
+        R.bindModalClose(detailModal, closeDetailModal);
+        R.bindSearch(document.getElementById('searchInput'), searchData, fetchAllData);
+        R.initSortDropdown(document.getElementById('sortToggleBtn'), document.getElementById('sortDropdown'), (mode) => {
+            currentSortMode = mode;
+            renderTable(currentDisplayData);
+        });
+
+        reviewForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const data = {
+                shopName: shopName.value.trim(), productName: productName.value.trim(),
+                rating: parseInt(rating.value), reviewer: reviewer.value.trim() || '测试用户',
+                remark: remark.value.trim(), images: document.getElementById('reviewImageData').value.trim()
+            };
+            if (!data.shopName || !data.productName) { Toast.warning('商店和商品名称不能为空'); return; }
+            const isEdit = originalShopName.value && originalProductName.value;
+            if (isEdit) modifyReview(originalShopName.value, originalProductName.value, originalReviewer.value, data);
+            else addReview(data);
+        });
+
+        // 初始化
+        initImageZoom();
+        fetchAllData();
+
+        // 检查从首页来的编辑请求
+        const editItem = sessionStorage.getItem('editItem');
+        if (editItem) {
+            try { openEditModal(JSON.parse(editItem)); } catch (e) {}
+            sessionStorage.removeItem('editItem');
+        }
+    })();
+    </script>
+</body>
+</html>
