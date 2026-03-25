@@ -1,11 +1,1456 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>PakePlus</title>
-    </head>
-    <body>
-        PakePlus
-    </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>小众测评</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23F5E6C8'/%3E%3Crect x='18' y='14' width='28' height='6' rx='3' fill='%238C5A2B'/%3E%3Crect x='20' y='20' width='24' height='28' rx='4' fill='%23D9A56D'/%3E%3Ccircle cx='26' cy='40' r='3' fill='%234B2C20'/%3E%3Ccircle cx='38' cy='40' r='3' fill='%234B2C20'/%3E%3Crect x='26' y='6' width='4' height='12' fill='%234B2C20'/%3E%3Crect x='34' y='6' width='4' height='12' fill='%234B2C20'/%3E%3C/svg%3E" />
+    
+    <!-- 引用公共CSS文件 -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/common.css">
+    
+    <style>
+        /* ===== 首页特定样式 ===== */
+
+        /* ----- 顶部标题栏 ----- */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+            padding-top: 8px;
+        }
+
+        .user-greeting {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .greeting-top {
+            font-size: 14px;
+            color: #8e98a3;
+            letter-spacing: 0.3px;
+        }
+
+        .username {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-top: 2px;
+            line-height: 1.2;
+            transition: color 0.3s ease;
+        }
+
+        .username span {
+            font-size: 20px;
+            margin-left: 4px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+            font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+            font-variant: normal;
+            font-weight: normal;
+        }
+
+        .login-btn {
+            background-color: var(--bg-card);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 6px var(--shadow-button);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+
+        .login-btn:hover {
+            background-color: var(--bg-feed-hover);
+            transform: scale(1.02);
+        }
+
+        .login-btn:active {
+            transform: scale(0.98);
+        }
+
+        .login-icon {
+            font-size: 16px;
+        }
+
+        /* ----- 分类按钮区域（三个核心测评入口）----- */
+        .category-section {
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 14px;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            transition: color 0.3s ease;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, var(--border-color), transparent);
+            margin-left: 10px;
+            transition: background 0.3s ease;
+        }
+
+        .category-grid {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .category-card {
+            flex: 1 1 calc(33.333% - 10px);  /* 三个按钮等宽，自适应 */
+            min-width: 100px;                /* 保证太窄时也不崩 */
+            background: var(--bg-category);
+            border-radius: 20px;
+            padding: 16px 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 5px 12px var(--shadow-button), 0 0 0 1px rgba(0,0,0,0.01);
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .category-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 20px var(--shadow-button), 0 0 0 1px var(--border-light);
+        }
+
+        .category-card:active {
+            transform: scale(0.97);
+            background: var(--bg-feed-hover);
+        }
+
+        /* 三个卡片的图标氛围色 (柔和) */
+        .card-milktea .category-emoji {
+            background: #f3e7d7;
+            transition: background 0.3s ease;
+        }
+        .card-airline .category-emoji {
+            background: #d7e5f0;
+            transition: background 0.3s ease;
+        }
+        .card-convenience .category-emoji {
+            background: #dff0dd;
+            transition: background 0.3s ease;
+        }
+
+        /* 深色模式下的卡片图标颜色 */
+        html.dark-mode .card-milktea .category-emoji {
+            background: #4a3a28;
+        }
+        html.dark-mode .card-airline .category-emoji {
+            background: #283a4a;
+        }
+        html.dark-mode .card-convenience .category-emoji {
+            background: #2a3a28;
+        }
+
+        .category-emoji {
+            width: 52px;
+            height: 52px;
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            margin-bottom: 4px;
+            box-shadow: inset 0 -2px 0 rgba(0,0,0,0.02);
+        }
+
+        .category-name {
+            font-weight: 600;
+            font-size: 17px;
+            color: var(--text-primary);
+            transition: color 0.3s ease;
+        }
+
+        .category-desc {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            margin-top: 2px;
+            transition: color 0.3s ease;
+        }
+
+        /* ----- 近期测评 (信息流预览) ----- */
+        .feed-section {
+            margin-top: 16px;
+        }
+
+        .feed-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 16px;
+        }
+
+        .feed-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            transition: color 0.3s ease;
+        }
+
+        .feed-card {
+            background-color: var(--bg-card);
+            border-radius: 24px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: background 0.1s ease;
+        }
+
+        .feed-card:hover {
+            background-color: var(--bg-feed-hover);
+        }
+
+        .feed-icon {
+            width: 44px;
+            height: 44px;
+            background-color: var(--bg-phone);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 8px var(--shadow-button);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .feed-content {
+            flex: 1;
+        }
+
+        .feed-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            font-size: 16px;
+            transition: color 0.3s ease;
+        }
+
+        .feed-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: var(--text-tertiary);
+            align-items: center;
+            transition: color 0.3s ease;
+        }
+
+        .feed-rating {
+            color: #f5a623;
+            letter-spacing: 2px;
+            font-size: 13px;
+        }
+
+        .feed-type {
+            background-color: var(--border-color);
+            padding: 2px 10px;
+            border-radius: 30px;
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+
+        /* 占位无数据时显示 */
+        .empty-feed {
+            text-align: center;
+            color: var(--text-light);
+            padding: 36px 0;
+            font-size: 15px;
+            background: var(--bg-card);
+            border-radius: 32px;
+            border: 1px dashed var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        /* ===== 表格样式 (和milk-tea.html一致) ===== */
+        .table-container {
+            background-color: var(--bg-phone);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .table-header {
+            display: grid;
+            grid-template-columns: 1.8fr 1.8fr 0.8fr;  /* 优化列宽比例，让来源列更宽 */
+            background-color: var(--bg-card);
+            padding: 14px 16px;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-light);
+            align-items: center;
+            gap: 12px;  /* 增加列间距 */
+            transition: all 0.3s ease;
+        }
+
+        /* 表头单元格对齐 */
+        .table-header div {
+            text-align: left;
+        }
+
+        .table-row {
+            display: grid;
+            grid-template-columns: 1.8fr 1.8fr 0.8fr;  /* 与表头保持一致 */
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--bg-phone);
+            cursor: pointer;
+            transition: background-color 0.15s;
+            align-items: start;
+            gap: 12px;  /* 列间距与表头一致 */
+        }
+
+        .table-row:active {
+            background-color: var(--bg-feed-hover);
+        }
+
+        .table-row:hover {
+            background-color: var(--bg-feed-hover);
+        }
+
+        .table-row:active {
+            background-color: var(--bg-card);
+        }
+
+        .cell {
+            font-size: 15px;
+            color: var(--text-primary);
+            line-height: 1.4;
+            transition: color 0.3s ease;
+        }
+
+        .cell-name {
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-align: left;
+        }
+
+        .cell-name-long {
+            font-weight: 500;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+            line-height: 1.4;
+            max-width: 100%;
+            text-align: left;
+        }
+
+        .cell-brand {
+            color: var(--text-secondary);
+            word-break: break-word;
+            overflow-wrap: break-word;
+            text-align: left;
+            transition: color 0.3s ease;
+        }
+
+        .cell-rating-wrapper {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+        }
+
+        .cell-rating {
+            font-weight: 600;
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 20px;
+            text-align: center;
+            min-width: 36px;
+        }
+
+        .rating-high {
+            background-color: #e3f2e9;
+            color: #2e7d5e;
+        }
+
+        .rating-medium {
+            background-color: #fff3e0;
+            color: #b85c00;
+        }
+
+        .rating-low {
+            background-color: #ffebee;
+            color: #b33e4e;
+        }
+
+        .rating-zero {
+            background-color: var(--bg-card);
+            color: var(--text-light);
+        }
+
+        /* 工具类 */
+        .mt-4 { margin-top: 16px; }
+        .text-small { font-size: 12px; color: var(--text-tertiary); transition: color 0.3s ease; }
+
+        .reload-btn {
+            margin-top: 12px;
+            padding: 8px 16px;
+            background: var(--text-primary);
+            color: var(--bg-phone);
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .reload-btn:hover {
+            opacity: 0.8;
+        }
+
+        .reload-btn:active {
+            transform: scale(0.98);
+        }
+
+        .error-message {
+            font-size: 12px;
+            margin-top: 8px;
+            color: var(--text-light);
+            transition: color 0.3s ease;
+        }
+
+        /* 登录按钮小动画（简单交互演示） */
+        .ripple-effect {
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 深色模式按钮 */
+        .dark-mode-toggle {
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px var(--shadow-button);
+            transition: all 0.3s ease;
+            z-index: 99;
+        }
+
+        .dark-mode-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px var(--shadow-button);
+        }
+
+        .dark-mode-toggle:active {
+            transform: scale(0.95);
+        }
+
+        /* 版本信息显示 */
+        .version-info {
+            position: absolute;
+            bottom: 12px;
+            left: 16px;
+            font-size: 11px;
+            color: var(--text-light);
+            line-height: 1.4;
+            font-family: 'Monaco', 'Menlo', monospace;
+            max-width: 150px;
+            transition: color 0.3s ease;
+        }
+
+        .version-info .version-label {
+            font-weight: 600;
+            color: #8a9bb0;
+            margin-bottom: 2px;
+        }
+
+        .version-info .version-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            opacity: 0.8;
+        }
+
+        .version-info .version-item span:first-child {
+            color: #abb8c8;
+        }
+
+        .version-info .version-item span:last-child {
+            color: #7a8a9b;
+            font-weight: 500;
+        }
+
+        /* ===== 模态框样式 ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--bg-modal-overlay);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: var(--bg-modal);
+            border-radius: 32px;
+            width: 90%;
+            max-width: 390px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s ease;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            font-size: 20px;
+            color: var(--text-primary);
+            transition: color 0.3s ease;
+        }
+
+        .close-btn {
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--text-tertiary);
+            line-height: 1;
+            transition: color 0.3s ease;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+
+        .modal-footer button {
+            flex: 1;
+            min-width: 80px;
+            padding: 14px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .cancel-btn {
+            background: var(--bg-phone);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .cancel-btn:hover {
+            background: var(--bg-feed-hover);
+        }
+
+        .submit-btn {
+            background: var(--text-primary);
+            border: none;
+            color: var(--bg-phone);
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            background: var(--text-secondary);
+        }
+
+        .delete-btn {
+            background: #ffebee;
+            border: none;
+            color: #b33e4e;
+            flex: 0 0 100%;
+        }
+
+        .delete-btn:hover {
+            background: #ffcdd2;
+        }
+
+        /* 详情模态框 */
+        .detail-content {
+            line-height: 1.6;
+        }
+
+        .detail-item {
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            transition: border-color 0.3s ease;
+        }
+
+        .detail-label {
+            font-size: 13px;
+            color: var(--text-light);
+            margin-bottom: 4px;
+            transition: color 0.3s ease;
+        }
+
+        .detail-value {
+            font-size: 16px;
+            color: var(--text-primary);
+            font-weight: 500;
+            word-break: break-word;
+            transition: color 0.3s ease;
+        }
+
+        .detail-value.rating {
+            font-size: 20px;
+            font-weight: 600;
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 24px;
+        }
+
+        .detail-value.rating-high {
+            background-color: #e3f2e9;
+            color: #2e7d5e;
+        }
+        
+        .detail-value.rating-medium {
+            background-color: #fff3e0;
+            color: #b85c00;
+        }
+        
+        .detail-value.rating-low {
+            background-color: #ffebee;
+            color: #b33e4e;
+        }
+        
+        .detail-value.rating-zero {
+            background-color: #f0f4f8;
+            color: #8a9bb0;
+        }
+
+        .review-image {
+            display: block;
+            width: 100%;
+            height: auto;
+            margin-top: 10px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-card);
+        }
+
+        .review-image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .review-image-card {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-card);
+        }
+
+        .review-image-card img {
+            width: 100%;
+            height: 90px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .image-zoom-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 24px;
+        }
+
+        .image-zoom-overlay.show {
+            display: flex;
+        }
+
+        .image-zoom-content {
+            position: relative;
+            max-width: min(92vw, 900px);
+            max-height: 85vh;
+        }
+
+        .image-zoom-img {
+            max-width: 100%;
+            max-height: 85vh;
+            border-radius: 16px;
+            display: block;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        }
+
+        .image-zoom-close {
+            position: absolute;
+            top: -14px;
+            right: -14px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: #ffffff;
+            color: #1f2c3a;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .review-image.is-hidden {
+            display: none;
+        }
+
+        /* 图片加载失败提示 */
+        .image-error-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-phone);
+            color: var(--text-light);
+            font-size: 12px;
+            height: 90px;
+            border-radius: 8px;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .review-image-card.image-failed {
+            border-color: #ffcdd2;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <div class="app-content">
+            <!-- 头部：用户名 + 登录按钮 (右上角) -->
+            <div class="header">
+                <div class="user-greeting">
+                    <span class="greeting-top">👋 欢迎回来</span>
+                    <div class="username">
+                        奶茶评测师
+                        <span>&#x1F37B;</span>
+                    </div>
+                </div>
+                <button class="login-btn" id="loginButton">
+                    <span class="login-icon">👤</span>
+                    登录
+                </button>
+            </div>
+
+            <!-- 测评分类 (三个核心按钮：奶茶、出行交通、美食) 后续可扩展 -->
+            <div class="category-section">
+                <div class="section-title">今日想测评什么？</div>
+                <div class="category-grid">
+                    <!-- 奶茶卡片 -->
+                    <div class="category-card card-milktea" data-category="奶茶">
+                        <div class="category-emoji">🥤</div>
+                        <span class="category-name">奶茶</span>
+                        <span class="category-desc">糖份快乐</span>
+                    </div>
+                    <!-- 出行交通卡片 -->
+                    <div class="category-card card-airline" data-category="出行交通">
+                        <div class="category-emoji">🚆</div>
+                        <span class="category-name">出行交通</span>
+                        <span class="category-desc">出行体验</span>
+                    </div>
+                    <!-- 美食卡片 -->
+                    <div class="category-card card-convenience" data-category="美食">
+                        <div class="category-emoji">&#x1F37D;&#xFE0F;</div>
+                        <span class="category-name">美食</span>
+                        <span class="category-desc">美食测评</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 近期测评 (表格格式，从API动态加载) -->
+            <div class="feed-section" id="feedSection">
+                <div class="feed-header">
+                    <h3>📋 社区新鲜测评</h3>
+                </div>
+                <div class="table-container" id="reviewTable" style="display: none;">
+                    <!-- 由JavaScript动态生成 -->
+                </div>
+            </div>
+
+            <!-- 脚注小提示，可忽略 -->
+            <div class="text-small mt-4" style="text-align:center; opacity:0.6;">点击卡片查看详情</div>
+
+            <!-- 详情模态框 -->
+            <div class="modal" id="detailModal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>测评详情</h3>
+                        <span class="close-btn" id="closeDetailBtn">&times;</span>
+                    </div>
+                    <div class="detail-content" id="detailContent">
+                        <!-- 动态填充 -->
+                    </div>
+                    <div class="modal-footer" id="detailFooter" style="margin-top: 24px;">
+                        <button type="button" class="cancel-btn" id="closeDetailBtnFooter">关闭</button>
+                        <button type="button" class="submit-btn" id="editDetailBtn">编辑</button>
+                        <button type="button" class="delete-btn" id="deleteDetailBtn">删除</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 版本信息显示（左下角） -->
+            <div class="version-info" id="versionInfo">
+                <div class="version-label">版本信息</div>
+                <div id="versionContent" style="opacity: 0.7;">加载中...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 深色模式按钮（屏幕右下角） -->
+    <button class="dark-mode-toggle" id="darkModeToggle" title="切换深色模式">
+        <span id="darkModeIcon">🌙</span>
+    </button>
+
+    <!-- 引用公共JavaScript文件 -->
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/image-zoom.js"></script>
+
+    <script>
+        (function() {
+            // 获取元素
+            const loginBtn = document.getElementById('loginButton');
+            const categoryCards = document.querySelectorAll('.category-card');
+            const usernameEl = document.querySelector('.username');
+            
+            // 使用全局CONFIG对象（从api.js中获取）
+            const BASE_URL = window.CONFIG.BASE_URL;
+            const UPLOAD_URL = window.CONFIG.UPLOAD_URL;
+
+
+            // ==================== 版本信息获取（带缓存） ====================
+            async function fetchVersionInfo() {
+                const versionContent = document.getElementById('versionContent');
+                const cacheKey = 'versionInfo';
+                
+                // 先检查缓存
+                const cachedVersion = sessionStorage.getItem(cacheKey);
+                if (cachedVersion) {
+                    try {
+                        const data = JSON.parse(cachedVersion);
+                        let html = '';
+                        data.forEach(item => {
+                            html += `<div class="version-item"><span>${item.type}</span><span>v${item.ver}</span></div>`;
+                        });
+                        versionContent.innerHTML = html;
+                        console.log('📦 版本信息使用缓存');
+                        return;
+                    } catch (e) {
+                        console.warn('缓存数据解析失败，重新查询');
+                    }
+                }
+                
+                // 缓存不存在或解析失败，调用API
+                const result = await API.version();
+                
+                if (result.success && result.data && Array.isArray(result.data)) {
+                    // 保存到缓存
+                    sessionStorage.setItem(cacheKey, JSON.stringify(result.data));
+                    
+                    let html = '';
+                    result.data.forEach(item => {
+                        html += `<div class="version-item"><span>${item.type}</span><span>v${item.ver}</span></div>`;
+                    });
+                    versionContent.innerHTML = html;
+                    console.log('✅ 版本信息获取成功 | 已缓存');
+                } else {
+                    versionContent.innerHTML = '<div style="opacity: 0.5;">版本查询失败</div>';
+                }
+            }
+
+            // 页面加载时获取版本信息（优先使用缓存）
+            fetchVersionInfo();
+
+            // ==================== 工具函数 ====================
+            // 获取评分类别
+            function getRatingClass(ratingValue) {
+                const num = Number(ratingValue);
+                if (isNaN(num) || num === 0) return 'rating-zero';
+                if (num >= 7 && num <= 10) return 'rating-high';
+                if (num >= 4 && num <= 6) return 'rating-medium';
+                if (num >= 1 && num <= 3) return 'rating-low';
+                return 'rating-zero';
+            }
+
+
+            // ==================== 社区测评数据加载 ====================
+            async function loadCommunityReviews() {
+                console.log('📥 加载社区测评数据...');
+
+                try {
+                    // 并行请求三个API
+                    const [milkTea, convenience, travel] = await Promise.all([
+                        API.shop.query(),
+                        API.convenience.query(),
+                        API.travel.query()
+                    ]);
+
+                    // 合并数据
+                    const normalized = [];
+                    
+                    if (milkTea.success && milkTea.data) {
+                        milkTea.data.forEach(item => {
+                            normalized.push({ ...item, __type: '奶茶', __timestamp: item.create_time || '' });
+                        });
+                    }
+                    
+                    if (convenience.success && convenience.data) {
+                        convenience.data.forEach(item => {
+                            normalized.push({ ...item, __type: '美食', __timestamp: item.created_at || '' });
+                        });
+                    }
+                    
+                    if (travel.success && travel.data) {
+                        travel.data.forEach(item => {
+                            normalized.push({ ...item, __type: '出行交通', __timestamp: item.created_at || '' });
+                        });
+                    }
+
+                    // 按时间排序，取前3条
+                    normalized.sort((a, b) => {
+                        const timeA = Date.parse(a.__timestamp) || 0;
+                        const timeB = Date.parse(b.__timestamp) || 0;
+                        return timeB - timeA;
+                    });
+
+                    const reviews = normalized.slice(0, 3);
+                    renderReviews(reviews);
+                    
+                    console.log('✅ 社区测评已加载，共 ' + reviews.length + ' 条');
+                } catch (error) {
+                    console.error('❌ 加载失败:', error);
+                    showDataLoadError('数据加载失败，请重试');
+                }
+            }
+            
+            // 渲染测评列表
+            function renderReviews(reviews) {
+                const reviewTable = document.getElementById('reviewTable');
+                const section = document.getElementById('feedSection');
+                
+                if (reviews.length === 0) {
+                    reviewTable.style.display = 'none';
+                    const emptyDiv = document.createElement('div');
+                    emptyDiv.className = 'empty-feed';
+                    emptyDiv.textContent = '✨ 还没有测评，快来发布第一条';
+                    if (section.querySelector('.empty-feed')) {
+                        section.querySelector('.empty-feed').remove();
+                    }
+                    section.appendChild(emptyDiv);
+                    return;
+                }
+
+                reviewTable.style.display = 'block';
+                let html = `
+                    <div class="table-header">
+                        <div>名称</div>
+                        <div>来源</div>
+                        <div>评分</div>
+                    </div>
+                `;
+
+                reviews.forEach((item, idx) => {
+                    let productName = '-';
+                    let shopName = '-';
+                    
+                    if (item.__type === '出行交通') {
+                        const isTransport = item.type === 'transport';
+                        productName = isTransport ? (item.线路 || '-') : (item.房型及价格 || item.酒店名 || '-');
+                        shopName = isTransport ? (item.公司名 || item.公司 || '-') : (item.酒店名 || '-');
+                    } else {
+                        productName = item.商品名 || item.商品名称 || '-';
+                        shopName = item.店铺名 || item.商店 || '-';
+                    }
+
+                    let rating = parseInt(item.评分, 10) || 3;
+                    rating = Math.max(1, Math.min(10, rating));
+
+                    let ratingClass = 'rating-zero';
+                    if (rating >= 7) ratingClass = 'rating-high';
+                    else if (rating >= 4) ratingClass = 'rating-medium';
+                    else if (rating > 0) ratingClass = 'rating-low';
+
+                    const nameClass = productName.length > 5 ? 'cell-name-long' : 'cell-name';
+
+                    html += `
+                        <div class="table-row">
+                            <div class="cell ${nameClass}" title="${productName}">${productName}</div>
+                            <div class="cell cell-brand" title="${shopName}">${shopName}</div>
+                            <div class="cell cell-rating-wrapper"><span class="cell-rating ${ratingClass}">${rating}</span></div>
+                        </div>
+                    `;
+                });
+
+                reviewTable.innerHTML = html;
+
+                // 绑定点击事件
+                document.querySelectorAll('.table-row').forEach((row, index) => {
+                    row.addEventListener('click', () => showDetail(reviews[index]));
+                });
+            }
+            
+            // 显示数据加载错误
+            function showDataLoadError(errorMsg) {
+                console.error('💥 显示错误信息:', errorMsg);
+                const reviewTable = document.getElementById('reviewTable');
+                reviewTable.style.display = 'none';
+                const section = document.getElementById('feedSection');
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'empty-feed';
+                emptyDiv.innerHTML = `
+                    <div>⚠️ 数据加载失败</div>
+                    <div class="error-message">${errorMsg}</div>
+                    <button onclick="location.reload()" class="reload-btn">重新加载</button>
+                `;
+                if (section.querySelector('.empty-feed')) {
+                    section.querySelector('.empty-feed').remove();
+                }
+                section.appendChild(emptyDiv);
+            }
+            
+            // 调用加载社区测评
+            loadCommunityReviews();
+
+            // ==================== 详情页相关函数 ====================
+            function showDetail(item) {
+                let ratingValue = parseInt(item.评分, 10) || 3;
+                ratingValue = Math.max(1, Math.min(10, ratingValue));
+                const ratingClass = getRatingClass(ratingValue);
+                const normalizeImageList = (value) => {
+                    if (!value) {
+                        return [];
+                    }
+                    if (Array.isArray(value)) {
+                        return value.filter(Boolean).map(normalizeImageUrl);
+                    }
+                    if (typeof value === 'string') {
+                        const trimmed = value.trim();
+                        if (!trimmed) {
+                            return [];
+                        }
+                        try {
+                            const parsed = JSON.parse(trimmed);
+                            if (Array.isArray(parsed)) {
+                                return parsed.filter(Boolean).map(normalizeImageUrl);
+                            }
+                        } catch (err) {
+                            return [normalizeImageUrl(trimmed)];
+                        }
+                        return [normalizeImageUrl(trimmed)];
+                    }
+                    return [];
+                };
+                
+                const normalizeImageUrl = (url) => {
+                    if (!url) return '';
+                    // 如果已经是完整URL，直接返回
+                    if (url.startsWith('http://') || url.startsWith('https://')) {
+                        return url;
+                    }
+                    // 如果是相对路径或文件名，拼接上传地址
+                    if (url.startsWith('/uploads/')) {
+                        return UPLOAD_URL + url;
+                    }
+                    // 如果只是文件名，拼接完整路径
+                    return UPLOAD_URL + '/uploads/' + url.replace(/^\/+/, '');
+                };
+                
+                const imageList = normalizeImageList(item.测评图片 || item.图片 || item.image || item.imageUrl || item.图片链接 || '');
+                const imageHtml = imageList.length
+                    ? `
+                        <div class="detail-item">
+                            <div class="detail-label">测评图片</div>
+                            <div class="detail-value">
+                                <div class="review-image-grid">
+                                    ${imageList.map((src, index) => `
+                                        <div class="review-image-card" data-index="${index}">
+                                            <img 
+                                                src="${src}" 
+                                                alt="测评图片 ${index + 1}" 
+                                                loading="lazy"
+                                                class="review-img"
+                                            >
+                                            <div class="image-error-placeholder" style="display:none;">图片加载失败</div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    `
+                    : '';
+                let detailHtml = '';
+                let itemTitle = '该测评';
+                if (item.__type === '出行交通') {
+                    const isTransport = item.type === 'transport';
+                    const reviewerName = item.测评人 || item.上传者 || '匿名';
+                    const remarkValue = item.备注 || '暂无内容';
+                    itemTitle = isTransport ? (item.线路 || '该测评') : (item.酒店名 || '该测评');
+
+                    detailHtml = `
+                        <div class="detail-item">
+                            <div class="detail-label">类型</div>
+                            <div class="detail-value">${isTransport ? '交通工具' : '酒店'}</div>
+                        </div>
+                    `;
+
+                    if (isTransport) {
+                        detailHtml += `
+                            <div class="detail-item">
+                                <div class="detail-label">公司名</div>
+                                <div class="detail-value">${item.公司名 || item.公司 || '-'}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">线路</div>
+                                <div class="detail-value">${item.线路 || '-'}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">配置及价格</div>
+                                <div class="detail-value">${item.配置及价格 || '-'}</div>
+                            </div>
+                        `;
+                    } else {
+                        detailHtml += `
+                            <div class="detail-item">
+                                <div class="detail-label">酒店名</div>
+                                <div class="detail-value">${item.酒店名 || '-'}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">房型及价格</div>
+                                <div class="detail-value">${item.房型及价格 || '-'}</div>
+                            </div>
+                        `;
+                    }
+
+                    detailHtml += `
+                        <div class="detail-item">
+                            <div class="detail-label">评分</div>
+                            <div class="detail-value rating ${ratingClass}">${ratingValue}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">测评人</div>
+                            <div class="detail-value">${reviewerName}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">备注</div>
+                            <div class="detail-value">${remarkValue}</div>
+                        </div>
+                        ${imageHtml}
+                    `;
+                } else {
+                    const productName = item.商品名 || item.商品名称 || '-';
+                    const shopName = item.店铺名 || item.商店 || '-';
+                    const content = item.备注 || item.测评内容 || '暂无内容';
+                    const configValue = item.配置 || '';
+                    itemTitle = productName;
+
+                    detailHtml = `
+                        <div class="detail-item">
+                            <div class="detail-label">商品名</div>
+                            <div class="detail-value">${productName}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">商店</div>
+                            <div class="detail-value">${shopName}</div>
+                        </div>
+                    `;
+
+                    if (configValue) {
+                        detailHtml += `
+                            <div class="detail-item">
+                                <div class="detail-label">配置</div>
+                                <div class="detail-value">${configValue}</div>
+                            </div>
+                        `;
+                    }
+
+                    detailHtml += `
+                        <div class="detail-item">
+                            <div class="detail-label">评分</div>
+                            <div class="detail-value rating ${ratingClass}">${ratingValue}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">测评人</div>
+                            <div class="detail-value">${item.上传者 || '匿名'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">测评内容</div>
+                            <div class="detail-value">${content}</div>
+                        </div>
+                        ${imageHtml}
+                    `;
+                }
+                
+                document.getElementById('detailContent').innerHTML = detailHtml;
+                
+                // 为图片添加加载/加载失败事件监听
+                setTimeout(() => {
+                    document.querySelectorAll('#detailModal .review-image-card .review-img').forEach(img => {
+                        img.onload = function() {
+                            this.style.display = 'block';
+                            const errorPlaceholder = this.parentElement.querySelector('.image-error-placeholder');
+                            if (errorPlaceholder) {
+                                errorPlaceholder.style.display = 'none';
+                            }
+                        };
+                        img.onerror = function() {
+                            // 防止重复触发
+                            if (!this.parentElement.classList.contains('image-failed')) {
+                                this.parentElement.classList.add('image-failed');
+                                this.style.display = 'none';
+                                const errorPlaceholder = this.parentElement.querySelector('.image-error-placeholder');
+                                if (errorPlaceholder) {
+                                    errorPlaceholder.style.display = 'block';
+                                }
+                            }
+                        };
+                        
+                        // 如果图片已经在缓存中，手动触发 onload
+                        if (img.complete) {
+                            if (img.naturalHeight !== 0) {
+                                img.onload?.();
+                            } else {
+                                img.onerror?.();
+                            }
+                        }
+                    });
+                }, 0);
+                
+                // 绑定编辑按钮事件 - 保存数据并跳转到对应页面
+                document.getElementById('editDetailBtn').onclick = function() {
+                    sessionStorage.setItem('editItem', JSON.stringify(item));
+                    if (item.__type === '美食') {
+                        window.location.href = 'convenience.html';
+                    } else if (item.__type === '出行交通') {
+                        window.location.href = 'travel.html';
+                    } else {
+                        window.location.href = 'milk-tea.html';
+                    }
+                };
+                
+                // 绑定删除按钮事件
+                document.getElementById('deleteDetailBtn').onclick = function() {
+                    if (confirm(`确定要删除 "${itemTitle}" 的测评吗？`)) {
+                        deleteReview(item);
+                    }
+                };
+                
+                document.getElementById('detailModal').classList.add('show');
+            }
+            
+            // 关闭详情模态框
+            function closeDetailModal() {
+                document.getElementById('detailModal').classList.remove('show');
+            }
+
+            // 删除测评
+            function deleteReview(item) {
+                if (item.__type === '出行交通') {
+                    const reviewerName = item.测评人 || item.上传者 || '';
+                    fetch(`${BASE_URL}/travel/delete`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            'type': item.type || '',
+                            '测评人': reviewerName,
+                            'created_at': item.created_at || ''
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.code === 200) {
+                            alert('删除成功');
+                            closeDetailModal();
+                            loadCommunityReviews();
+                        } else {
+                            alert('删除失败: ' + (data.message || '未知错误'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('删除失败:', error);
+                        alert('删除失败: ' + error.message);
+                    });
+                    return;
+                }
+                const isConvenience = item.__type === '美食';
+                const url = isConvenience ? `${BASE_URL}/convenience/delete` : `${BASE_URL}/shop/delete`;
+                const payload = isConvenience
+                    ? {
+                        '商品名称': item.商品名称,
+                        '商店': item.商店,
+                        '上传者': item.上传者
+                    }
+                    : {
+                        '店铺名': item.店铺名,
+                        '商品名': item.商品名,
+                        '上传者': item.上传者
+                    };
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200) {
+                        alert('删除成功');
+                        closeDetailModal();
+                        loadCommunityReviews(); // 重新加载数据
+                    } else {
+                        alert('删除失败: ' + (data.message || '未知错误'));
+                    }
+                })
+                .catch(error => {
+                    console.error('删除失败:', error);
+                    alert('删除失败: ' + error.message);
+                });
+            }
+            
+            // 绑定模态框关闭事件 - 使用 mousedown/mouseup 来精确判断，避免文本拖拽误触
+            const detailModal = document.getElementById('detailModal');
+            let detailModalMouseDownOnBackground = false;
+
+            document.getElementById('closeDetailBtn').addEventListener('click', closeDetailModal);
+            document.getElementById('closeDetailBtnFooter').addEventListener('click', closeDetailModal);
+            
+            detailModal.addEventListener('mousedown', function(e) {
+                // 只记录在背景上的 mousedown
+                detailModalMouseDownOnBackground = (e.target === detailModal);
+            });
+
+            detailModal.addEventListener('click', function(e) {
+                // 阻止事件进一步冒泡
+                if (e.target === detailModal) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                }
+                // 只有同时满足以下条件才关闭：
+                // 1. mousedown 发生在背景上
+                // 2. click 的 e.target 是背景（说明 mouseup 也在背景上）
+                if (detailModalMouseDownOnBackground && e.target === detailModal) {
+                    closeDetailModal();
+                }
+                // 重置标志位
+                detailModalMouseDownOnBackground = false;
+            }, false);
+
+            // 在 modal-content 上阻止事件冒泡
+            const detailModalContent = detailModal.querySelector('.modal-content');
+            if (detailModalContent) {
+                detailModalContent.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                }, false);
+                detailModalContent.addEventListener('mousedown', function(e) {
+                    e.stopPropagation();
+                }, false);
+            }
+
+            // 简单的交互反馈（点击登录按钮）
+            loginBtn.addEventListener('click', function() {
+                // 这里只是一个演示效果：点击登录后，用户名会变化（模拟登录切换）
+                // 实际开发中，这里会跳转到登录页或弹出登录框
+                if (usernameEl) {
+                    const currentName = usernameEl.childNodes[0].nodeValue.trim(); // 获取文本
+                    if (currentName === '奶茶评测师' || currentName.includes('奶茶评测师')) {
+                        // 模拟登录为另一个用户
+                        usernameEl.innerHTML = '咖啡研究员 <span>&#x2615;&#xFE0F;</span>';
+                    } else {
+                        usernameEl.innerHTML = '奶茶评测师 <span>&#x1F37B;</span>';
+                    }
+                }
+                // 控制台提示
+                console.log('登录按钮点击 (演示交互)');
+            });
+
+            // 为每个分类卡片添加点击事件 (后期跳转到测评表单)
+            categoryCards.forEach(card => {
+    card.addEventListener('click', function(e) {
+        const category = this.getAttribute('data-category') || '未知';
+        
+        // 根据类别跳转到不同页面
+        if (category === '奶茶') {
+            window.location.href = 'milk-tea.html';
+        } else if (category === '出行交通') {
+            window.location.href = 'travel.html';
+        } else if (category === '美食') {
+            window.location.href = 'convenience.html';
+        } else {
+            alert(`📝 准备测评: ${category}\n(正式开发时将跳转到动态表单页面)`);
+        }
+    });
+});
+
+
+            // 可选：给所有卡片增加触摸友好效果 (防止双击缩放等)
+            const allButtons = document.querySelectorAll('.category-card, .login-btn, .feed-more');
+            allButtons.forEach(btn => {
+                btn.addEventListener('touchstart', function(e) {
+                    // 只是为了移动端点击响应更快，不加额外逻辑
+                }, { passive: true });
+            });
+
+            // 登录按钮也可以模拟一个小动画 (装饰)
+            initImageZoom();
+        })();
+    </script>
+
+    <!-- 附加说明：这是非常轻的演示界面，完全符合手机预览。所有样式、交互都只用了原生html/css/js -->
+</body>
 </html>
