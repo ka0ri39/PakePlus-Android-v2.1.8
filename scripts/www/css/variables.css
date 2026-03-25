@@ -1,0 +1,38 @@
+/* ===== 主题色变量 ===== */
+:root {
+    --bg-body: #f5f7fa;
+    --bg-phone: #ffffff;
+    --bg-card: #f9fafc;
+    --bg-feed-hover: #f2f6fc;
+    --bg-category: linear-gradient(145deg, #ffffff, #f9fbfd);
+    --bg-search: #f0f4f8;
+    --bg-modal: #ffffff;
+    --bg-modal-overlay: rgba(0, 0, 0, 0.5);
+    --text-primary: #1f2c3a;
+    --text-secondary: #4f6072;
+    --text-tertiary: #7c8b9c;
+    --text-light: #abb8c8;
+    --border-color: #eef2f6;
+    --border-light: #dce5f0;
+    --shadow-color: rgba(0, 0, 0, 0.05);
+    --shadow-button: rgba(0, 0, 0, 0.04);
+}
+
+html.dark-mode {
+    --bg-body: #0f1419;
+    --bg-phone: #1a1f27;
+    --bg-card: #232a35;
+    --bg-feed-hover: #2a3140;
+    --bg-category: linear-gradient(145deg, #232a35, #1a1f27);
+    --bg-search: #232a35;
+    --bg-modal: #1a1f27;
+    --bg-modal-overlay: rgba(0, 0, 0, 0.8);
+    --text-primary: #e8ecf1;
+    --text-secondary: #b0bcc9;
+    --text-tertiary: #8a96a8;
+    --text-light: #6b7a8a;
+    --border-color: #2e3540;
+    --border-light: #3d4655;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+    --shadow-button: rgba(0, 0, 0, 0.2);
+}
